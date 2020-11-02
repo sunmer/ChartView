@@ -19,6 +19,8 @@ public struct BarChartView : View {
     public var dropShadow: Bool
     public var cornerImage: Image
     public var valueSpecifier:String
+    public var valueChangeCallback: (((String, Double)?) -> Void)?
+    public var onGestureEndedCallback: (() -> Void)?
     
     @State private var touchLocation: CGFloat = -1.0
     @State private var showValue: Bool = false
@@ -27,13 +29,18 @@ public struct BarChartView : View {
         didSet{
             if(oldValue != self.currentValue && self.showValue) {
                 HapticFeedback.playSelection()
+                if let callback = self.valueChangeCallback {
+                    if self.data.valuesGiven && self.getCurrentValue() != nil {
+                        callback(self.getCurrentValue())
+                    }
+                }
             }
         }
     }
     var isFullWidth:Bool {
         return self.formSize == ChartForm.large
     }
-    public init(data:ChartData, title: String, legend: String? = nil, style: ChartStyle = Styles.barChartStyleOrangeLight, form: CGSize? = ChartForm.medium, dropShadow: Bool? = true, cornerImage:Image? = Image(systemName: "waveform.path.ecg"), valueSpecifier: String? = "%.1f"){
+    public init(data:ChartData, title: String, legend: String? = nil, style: ChartStyle = Styles.barChartStyleOrangeLight, form: CGSize? = ChartForm.medium, dropShadow: Bool? = true, cornerImage:Image? = Image(systemName: "waveform.path.ecg"), valueSpecifier: String? = "%.1f", valueChangeCallback: (((String, Double)?) -> Void)? = nil, onGestureEndedCallback: (() -> Void)? = nil){
         self.data = data
         self.title = title
         self.legend = legend
@@ -43,6 +50,8 @@ public struct BarChartView : View {
         self.dropShadow = dropShadow!
         self.cornerImage = cornerImage!
         self.valueSpecifier = valueSpecifier!
+        self.valueChangeCallback = valueChangeCallback
+        self.onGestureEndedCallback = onGestureEndedCallback
     }
     
     public var body: some View {
@@ -53,7 +62,12 @@ public struct BarChartView : View {
                 .shadow(color: self.style.dropShadowColor, radius: self.dropShadow ? 8 : 0)
             VStack(alignment: .leading){
                 HStack{
-                    if(!showValue){
+                    Text(self.title)
+                        .font(.headline)
+                        .foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.textColor : self.style.textColor)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                    /*if(!showValue){
                         Text(self.title)
                             .font(.headline)
                             .foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.textColor : self.style.textColor)
@@ -61,7 +75,7 @@ public struct BarChartView : View {
                         Text("\(self.currentValue, specifier: self.valueSpecifier)")
                             .font(.headline)
                             .foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.textColor : self.style.textColor)
-                    }
+                    }*/
                     if(self.formSize == ChartForm.large && self.legend != nil && !showValue) {
                         Text(self.legend!)
                             .font(.callout)
@@ -108,6 +122,9 @@ public struct BarChartView : View {
                     self.showValue = false
                     self.showLabelValue = false
                     self.touchLocation = -1
+                    if let callback = self.onGestureEndedCallback {
+                        callback()
+                    }
                 })
         )
             .gesture(TapGesture()
