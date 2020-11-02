@@ -57,7 +57,7 @@ public struct BarChartView : View {
     public var body: some View {
         ZStack{
             Rectangle()
-                .fill(self.colorScheme == .dark ? self.darkModeStyle.backgroundColor : self.style.backgroundColor)
+                .fill(self.style.backgroundColor)
                 .cornerRadius(20)
                 .shadow(color: self.style.dropShadowColor, radius: self.dropShadow ? 8 : 0)
             VStack(alignment: .leading){
