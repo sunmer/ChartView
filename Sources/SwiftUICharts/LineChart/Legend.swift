@@ -12,6 +12,7 @@ struct Legend: View {
     @ObservedObject var data: ChartData
     @Binding var frame: CGRect
     @Binding var hideHorizontalLines: Bool
+    var valueSpecifier: String
     @Environment(\.colorScheme) var colorScheme: ColorScheme
     let padding:CGFloat = 3
 
@@ -42,7 +43,7 @@ struct Legend: View {
         ZStack(alignment: .topLeading){
             ForEach((0...4), id: \.self) { height in
                 HStack(alignment: .center){
-                    Text("\(self.getYLegendSafe(height: height), specifier: "%.2f")").offset(x: 0, y: self.getYposition(height: height) )
+                    Text("\(self.getYLegendSafe(height: height), specifier: self.valueSpecifier)").offset(x: 0, y: self.getYposition(height: height) )
                         .foregroundColor(Colors.LegendText)
                         .font(.caption)
                     self.line(atHeight: self.getYLegendSafe(height: height), width: self.frame.width)
@@ -93,7 +94,7 @@ struct Legend: View {
 struct Legend_Previews: PreviewProvider {
     static var previews: some View {
         GeometryReader{ geometry in
-            Legend(data: ChartData(points: [0.2,0.4,1.4,4.5]), frame: .constant(geometry.frame(in: .local)), hideHorizontalLines: .constant(false))
+            Legend(data: ChartData(points: [0.2,0.4,1.4,4.5]), frame: .constant(geometry.frame(in: .local)), hideHorizontalLines: .constant(false), valueSpecifier: "%.0f")
         }.frame(width: 320, height: 200)
     }
 }

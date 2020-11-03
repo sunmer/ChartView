@@ -15,6 +15,9 @@ public struct LineView: View {
     public var style: ChartStyle
     public var darkModeStyle: ChartStyle
     public var valueSpecifier:String
+    public var valueChangeCallback: (((Int)?) -> Void)?
+    public var onGestureEndedCallback: (() -> Void)?
+    @State public var currentIndex: Int = 0
     
     @Environment(\.colorScheme) var colorScheme: ColorScheme
     @State private var showLegend = false
@@ -29,14 +32,17 @@ public struct LineView: View {
                 title: String? = nil,
                 legend: String? = nil,
                 style: ChartStyle = Styles.lineChartStyleOne,
-                valueSpecifier: String? = "%.1f") {
-        
+                valueSpecifier: String? = "%.1f",
+                valueChangeCallback: (((Int)?) -> Void)? = nil,
+                onGestureEndedCallback: (() -> Void)? = nil) {
         self.data = ChartData(points: data)
         self.title = title
         self.legend = legend
         self.style = style
         self.valueSpecifier = valueSpecifier!
         self.darkModeStyle = style.darkModeStyle != nil ? style.darkModeStyle! : Styles.lineViewDarkMode
+        self.valueChangeCallback = valueChangeCallback
+        self.onGestureEndedCallback = onGestureEndedCallback
     }
     
     public var body: some View {
@@ -45,7 +51,7 @@ public struct LineView: View {
                 Group{
                     if (self.title != nil){
                         Text(self.title!)
-                            .font(.title)
+                            .font(.system(size: 22, weight: .bold))
                             .bold().foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.textColor : self.style.textColor)
                     }
                     if (self.legend != nil){
@@ -53,14 +59,14 @@ public struct LineView: View {
                             .font(.callout)
                             .foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.legendTextColor : self.style.legendTextColor)
                     }
-                }.offset(x: 0, y: 20)
+                }.offset(x: 0, y: -20)
                 ZStack{
                     GeometryReader{ reader in
                         Rectangle()
                             .foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.backgroundColor : self.style.backgroundColor)
                         if(self.showLegend){
                             Legend(data: self.data,
-                                   frame: .constant(reader.frame(in: .local)), hideHorizontalLines: self.$hideHorizontalLines)
+                                   frame: .constant(reader.frame(in: .local)), hideHorizontalLines: self.$hideHorizontalLines, valueSpecifier: self.valueSpecifier)
                                 .transition(.opacity)
                                 .animation(Animation.easeOut(duration: 1).delay(1))
                         }
@@ -81,24 +87,26 @@ public struct LineView: View {
                             self.showLegend = false
                         }
                     }
-                    .frame(width: geometry.frame(in: .local).size.width, height: 240)
-                    .offset(x: 0, y: 40 )
-                    MagnifierRect(currentNumber: self.$currentDataNumber, valueSpecifier: self.valueSpecifier)
-                        .opacity(self.opacity)
-                        .offset(x: self.dragLocation.x - geometry.frame(in: .local).size.width/2, y: 36)
                 }
                 .frame(width: geometry.frame(in: .local).size.width, height: 240)
                 .gesture(DragGesture()
                 .onChanged({ value in
+                    print(value)
                     self.dragLocation = value.location
                     self.indicatorLocation = CGPoint(x: max(value.location.x-30,0), y: 32)
                     self.opacity = 1
                     self.closestPoint = self.getClosestDataPoint(toPoint: value.location, width: geometry.frame(in: .local).size.width-30, height: 240)
                     self.hideHorizontalLines = true
+                    if let callback = self.valueChangeCallback {
+                        callback(self.currentIndex)
+                    }
                 })
                     .onEnded({ value in
                         self.opacity = 0
                         self.hideHorizontalLines = false
+                        if let callback = self.onGestureEndedCallback {
+                            callback()
+                        }
                     })
                 )
             }
@@ -109,11 +117,11 @@ public struct LineView: View {
         let points = self.data.onlyPoints()
         let stepWidth: CGFloat = width / CGFloat(points.count-1)
         let stepHeight: CGFloat = height / CGFloat(points.max()! + points.min()!)
-        
-        let index:Int = Int(floor((toPoint.x-15)/stepWidth))
+        let index = Int(floor((toPoint.x-15)/stepWidth))
         if (index >= 0 && index < points.count){
-            self.currentDataNumber = points[index]
-            return CGPoint(x: CGFloat(index)*stepWidth, y: CGFloat(points[index])*stepHeight)
+            self.currentIndex = index
+            self.currentDataNumber = points[self.currentIndex]
+            return CGPoint(x: CGFloat(self.currentIndex)*stepWidth, y: CGFloat(points[self.currentIndex])*stepHeight)
         }
         return .zero
     }
