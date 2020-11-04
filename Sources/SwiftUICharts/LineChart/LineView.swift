@@ -26,7 +26,6 @@ public struct LineView: View {
     @State private var closestPoint: CGPoint = .zero
     @State private var opacity:Double = 0
     @State private var currentDataNumber: Double = 0
-    @State private var hideHorizontalLines: Bool = false
     
     public init(data: [Double],
                 title: String? = nil,
@@ -47,7 +46,7 @@ public struct LineView: View {
     
     public var body: some View {
         GeometryReader{ geometry in
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(spacing: 0) {
                 Group{
                     if (self.title != nil){
                         Text(self.title!)
@@ -59,21 +58,20 @@ public struct LineView: View {
                             .font(.callout)
                             .foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.legendTextColor : self.style.legendTextColor)
                     }
-                }.offset(x: 0, y: -20)
+                }.offset(x: 0, y: 0)
                 ZStack{
                     GeometryReader{ reader in
                         Rectangle()
                             .foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.backgroundColor : self.style.backgroundColor)
                         if(self.showLegend){
                             Legend(data: self.data,
-                                   frame: .constant(reader.frame(in: .local)), hideHorizontalLines: self.$hideHorizontalLines, valueSpecifier: self.valueSpecifier)
+                                   frame: .constant(reader.frame(in: .local)), valueSpecifier: self.valueSpecifier)
                                 .transition(.opacity)
                                 .animation(Animation.easeOut(duration: 1).delay(1))
                         }
                         Line(data: self.data,
                              frame: .constant(CGRect(x: 0, y: 0, width: reader.frame(in: .local).width - 30, height: reader.frame(in: .local).height)),
                              touchLocation: self.$indicatorLocation,
-                             showIndicator: self.$hideHorizontalLines,
                              minDataValue: .constant(nil),
                              maxDataValue: .constant(nil),
                              showBackground: false,
@@ -87,27 +85,26 @@ public struct LineView: View {
                             self.showLegend = false
                         }
                     }
+                    .frame(width: geometry.frame(in: .local).size.width, height: 240)
+                    .offset(x: 0, y: 40)
                 }
                 .frame(width: geometry.frame(in: .local).size.width, height: 240)
                 .gesture(DragGesture()
                 .onChanged({ value in
-                    print(value)
                     self.dragLocation = value.location
                     self.indicatorLocation = CGPoint(x: max(value.location.x-30,0), y: 32)
                     self.opacity = 1
                     self.closestPoint = self.getClosestDataPoint(toPoint: value.location, width: geometry.frame(in: .local).size.width-30, height: 240)
-                    self.hideHorizontalLines = true
                     if let callback = self.valueChangeCallback {
                         callback(self.currentIndex)
                     }
                 })
-                    .onEnded({ value in
-                        self.opacity = 0
-                        self.hideHorizontalLines = false
-                        if let callback = self.onGestureEndedCallback {
-                            callback()
-                        }
-                    })
+                .onEnded({ value in
+                    self.opacity = 0
+                    if let callback = self.onGestureEndedCallback {
+                        callback()
+                    }
+                })
                 )
             }
         }

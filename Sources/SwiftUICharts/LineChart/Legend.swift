@@ -11,7 +11,6 @@ import SwiftUI
 struct Legend: View {
     @ObservedObject var data: ChartData
     @Binding var frame: CGRect
-    @Binding var hideHorizontalLines: Bool
     var valueSpecifier: String
     @Environment(\.colorScheme) var colorScheme: ColorScheme
     let padding:CGFloat = 3
@@ -47,8 +46,7 @@ struct Legend: View {
                         .foregroundColor(Colors.LegendText)
                         .font(.caption)
                     self.line(atHeight: self.getYLegendSafe(height: height), width: self.frame.width)
-                        .stroke(self.colorScheme == .dark ? Colors.LegendDarkColor : Colors.LegendColor, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [5,height == 0 ? 0 : 10]))
-                        .opacity((self.hideHorizontalLines && height != 0) ? 0 : 1)
+                        .stroke(self.colorScheme == .dark ? Colors.LegendDarkColor : Colors.LegendColor, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [10]))
                         .rotationEffect(.degrees(180), anchor: .center)
                         .rotation3DEffect(.degrees(180), axis: (x: 0, y: 1, z: 0))
                         .animation(.easeOut(duration: 0.2))
@@ -94,7 +92,7 @@ struct Legend: View {
 struct Legend_Previews: PreviewProvider {
     static var previews: some View {
         GeometryReader{ geometry in
-            Legend(data: ChartData(points: [0.2,0.4,1.4,4.5]), frame: .constant(geometry.frame(in: .local)), hideHorizontalLines: .constant(false), valueSpecifier: "%.0f")
+            Legend(data: ChartData(points: [0.2,0.4,1.4,4.5]), frame: .constant(geometry.frame(in: .local)), valueSpecifier: "%.0f")
         }.frame(width: 320, height: 200)
     }
 }

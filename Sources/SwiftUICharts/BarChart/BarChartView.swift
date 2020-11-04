@@ -126,7 +126,7 @@ public struct BarChartView : View {
                         callback()
                     }
                 })
-        )
+            )
             .gesture(TapGesture()
         )
     }

@@ -114,7 +114,6 @@ public struct MultiLineChartView: View {
                             Line(data: self.data[i],
                                  frame: .constant(geometry.frame(in: .local)),
                                  touchLocation: self.$touchLocation,
-                                 showIndicator: self.$showIndicatorDot,
                                  minDataValue: .constant(self.globalMin),
                                  maxDataValue: .constant(self.globalMax),
                                  showBackground: false,
