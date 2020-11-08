@@ -50,8 +50,10 @@ public struct LineView: View {
                 Group{
                     if (self.title != nil){
                         Text(self.title!)
-                            .font(.system(size: 22, weight: .bold))
+                            .font(.system(size: 18, weight: .bold))
                             .bold().foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.textColor : self.style.textColor)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     if (self.legend != nil){
                         Text(self.legend!)
@@ -62,7 +64,7 @@ public struct LineView: View {
                 ZStack{
                     GeometryReader{ reader in
                         Rectangle()
-                            .foregroundColor(self.colorScheme == .dark ? self.darkModeStyle.backgroundColor : self.style.backgroundColor)
+                            .foregroundColor(self.style.backgroundColor)
                         if(self.showLegend){
                             Legend(data: self.data,
                                    frame: .constant(reader.frame(in: .local)), valueSpecifier: self.valueSpecifier)
